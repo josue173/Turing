@@ -112,23 +112,6 @@ class TuringMachine {
         }
 
         this.estados[n++] = estadoFinal;
-
-        // Imprimir los estados para verificar
-        System.out.println("Estados almacenados en el arreglo:");
-        for (String estado : estados) {
-            System.out.println(estado);
-        }
-
-        // Imprimir la tabla de transiciones
-        for (int i = 0; i < partesCount; i++) {
-            System.out.print("Fila " + i + ": ");
-            for (int j = 0; j < partes[i].length; j++) {
-                if (partes[i][j] != null) {
-                    System.out.print(partes[i][j] + " ");
-                }
-            }
-            System.out.println();
-        }
         
         for(String estado: estados ){
             grafo.addNode(estado);
@@ -159,7 +142,9 @@ class TuringMachine {
 
         grafo.setAttribute("ui.stylesheet",
             "node { fill-color: blue; size: 20px; text-alignment: at-right; } " +
-            "edge { fill-color: black; text-size: 14px; }");
+            "edge { fill-color: black; text-size: 14px; shape: cubic-curve; arrow-size: 8px, 8px; }");
+
+
         grafo.setAttribute("ui.title", "Grafo de la Máquina de Turing");
 
         grafo.display();
