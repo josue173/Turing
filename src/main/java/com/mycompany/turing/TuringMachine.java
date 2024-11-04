@@ -143,8 +143,6 @@ class TuringMachine {
         grafo.setAttribute("ui.stylesheet",
             "node { fill-color: blue; size: 20px; text-alignment: at-right; } " +
             "edge { fill-color: black; text-size: 14px; shape: cubic-curve; arrow-size: 8px, 8px; }");
-
-
         grafo.setAttribute("ui.title", "Grafo de la Máquina de Turing");
 
         grafo.display();
