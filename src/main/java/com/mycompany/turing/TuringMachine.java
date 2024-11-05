@@ -13,7 +13,6 @@ import org.graphstream.graph.implementations.*;
 
 class TuringMachine {
     private String estadoInicial;
-    private String estadoFinal;
     private Set<String> estadosAceptacion;
     private Set<String> estadosIntermedios;
     private Map<String, Transicion> mapaTransiciones;
@@ -21,22 +20,21 @@ class TuringMachine {
     private String[] estados;
     private int partesCount = 0;
 
-    public TuringMachine(String estadoInicial, String estadoFinal, Set<String> estadosIntermedios, Set<String> estadosAceptacion, Map<String, Transicion> mapaTransiciones) {
+    public TuringMachine(String estadoInicial, Set<String> estadosIntermedios, Set<String> estadosAceptacion, Map<String, Transicion> mapaTransiciones) {
         this.estadoInicial = estadoInicial;
-        this.estadoFinal = estadoFinal;
         this.estadosIntermedios = estadosIntermedios;
         this.estadosAceptacion = estadosAceptacion;
         this.mapaTransiciones = mapaTransiciones;
         this.partes = new String[100][5];
 
         // Inicializar el arreglo de estados con el tamaño adecuado
-        int totalEstados = 1 + 1 + estadosAceptacion.size() + estadosIntermedios.size(); // estadoInicial + estadoFinal + estados de aceptación + estados intermedios
+        int totalEstados = 1 + estadosAceptacion.size() + estadosIntermedios.size(); // estadoInicial + estados de aceptación + estados intermedios
         this.estados = new String[totalEstados];
     }
 
     public void imprimirConfiguracion() {
         System.out.println("Estado Inicial: " + this.estadoInicial);
-        System.out.println("Estado Final: " + this.estadoFinal);
+        System.out.println("Estados de Aceptación: " + String.join(", ", this.estadosAceptacion));
         System.out.println("Estados intermedios: " + String.join(", ", this.estadosIntermedios));
         System.out.println("Tabla de transición de estados:");
         System.out.printf("%-15s %-15s %-15s %-15s %-15s%n", "Estado Inicial", "Símbolo Leído", "Nuevo Estado", "Símbolo Escrito", "Movimiento");
@@ -55,19 +53,18 @@ class TuringMachine {
     public static TuringMachine cargarDesdeArchivo(String ruta) throws IOException {
         BufferedReader lector = new BufferedReader(new FileReader(ruta));
 
-        // Leer estado de aceptación
+        // Leer estado inicial
         String estadoInicial = lector.readLine();
 
-        // Leer estado final
-        String estadoFinal = lector.readLine();
+        // Leer estados de aceptación
+        Set<String> estadosAceptacion = new HashSet<>(Arrays.asList(lector.readLine().split(",")));
 
         // Leer estados intermedios
         Set<String> estadosIntermedios = new HashSet<>(Arrays.asList(lector.readLine().split(",")));
 
         // Mapa de transiciones
-        Set<String> estadosAceptacion = new HashSet<>();
         HashMap<String, Transicion> mapaTransiciones = new HashMap<>();
-        TuringMachine machine = new TuringMachine(estadoInicial, estadoFinal, estadosIntermedios, estadosAceptacion, mapaTransiciones);
+        TuringMachine machine = new TuringMachine(estadoInicial, estadosIntermedios, estadosAceptacion, mapaTransiciones);
 
         String linea;
         while ((linea = lector.readLine()) != null) {
@@ -87,7 +84,6 @@ class TuringMachine {
             char simboloEscrito = partesLinea[2].charAt(0);
             String siguienteEstado = partesLinea[3];
             char movimiento = partesLinea[4].charAt(0);
-
             mapaTransiciones.put(estadoActual + "," + simboloLeido, new Transicion(simboloLeido, simboloEscrito, siguienteEstado, movimiento));
         }
 
@@ -96,67 +92,60 @@ class TuringMachine {
     }
 
     public void CrearGrafo() {
-        System.setProperty("org.graphstream.ui", "swing");
-        Graph grafo = new SingleGraph("Máquina de Turing");
+    System.setProperty("org.graphstream.ui", "swing");
+    Graph grafo = new SingleGraph("Máquina de Turing");
 
-        // Agregar estados al arreglo 'estados'
-        int n = 0;
-        this.estados[n++] = estadoInicial;
-        
-        for (String estado : estadosAceptacion) {
-            this.estados[n++] = estado;
-        }
+    // Agregar estados al arreglo 'estados'
+    int n = 0;
+    this.estados[n++] = estadoInicial;
+    
+    for (String estado : estadosAceptacion) {
+        this.estados[n++] = estado;
+    }
 
-        for (String estado : estadosIntermedios) {
-            this.estados[n++] = estado;
-        }
-
-        this.estados[n++] = estadoFinal;
-        
-        for(String estado: estados ){
-            grafo.addNode(estado);
-        }
-
-        // Agregar nodos y aristas al grafo
-        for (String[] parte : partes) {
-            if (parte.length < 5) continue;
-
-            String estadoActual = parte[0];
-            String siguienteEstado = parte[3];
-
-            if (estadoActual != null && grafo.getNode(estadoActual) == null) {
-                grafo.addNode(estadoActual).setAttribute("ui.label", "Estado " + estadoActual);
-            }
-            if (siguienteEstado != null && !estadoActual.equals(siguienteEstado) && grafo.getNode(siguienteEstado) == null) {
-                grafo.addNode(siguienteEstado).setAttribute("ui.label", "Estado " + siguienteEstado);
-            }
-
-            if (estadoActual != null && siguienteEstado != null) {
-                String edgeId = estadoActual + "->" + siguienteEstado;
-                if (grafo.getEdge(edgeId) == null) {
-                    Edge arista = grafo.addEdge(edgeId, estadoActual, siguienteEstado, true);
-                    arista.setAttribute("ui.label", "Transición: " + estadoActual + " a " + siguienteEstado);
-                }
-            }
-        }
-
-        grafo.setAttribute("ui.stylesheet",
-            "node { fill-color: blue; size: 20px; text-alignment: at-right; } " +
-            "edge { fill-color: black; text-size: 14px; shape: cubic-curve; arrow-size: 8px, 8px; }");
-        grafo.setAttribute("ui.title", "Grafo de la Máquina de Turing");
-
-        grafo.display();
+    for (String estado : estadosIntermedios) {
+        this.estados[n++] = estado;
     }
     
+    // Crear nodos para cada estado
+    for (String estado : estados) {
+        if (estado != null) {
+            grafo.addNode(estado).setAttribute("ui.label", "Estado " + estado);
+        }
+    }
+
+    // Crear aristas (transiciones) a partir de mapaTransiciones
+    for (Map.Entry<String, Transicion> entrada : mapaTransiciones.entrySet()) {
+        String estadoActual = entrada.getKey().split(",")[0];
+        String siguienteEstado = entrada.getValue().siguienteEstado;
+        
+        // Agregar arista entre estadoActual y siguienteEstado si no existe
+        String edgeId = estadoActual + "->" + siguienteEstado;
+        if (grafo.getEdge(edgeId) == null) {
+            Edge arista = grafo.addEdge(edgeId, estadoActual, siguienteEstado, true);
+            arista.setAttribute("ui.label", "Transición: " + estadoActual + " a " + siguienteEstado);
+        }
+    }
+
+    // Estilo del grafo
+    grafo.setAttribute("ui.stylesheet",
+        "node { fill-color: blue; size: 20px; text-alignment: at-right; } " +
+        "edge { fill-color: black; text-size: 14px; shape: cubic-curve; arrow-size: 8px, 8px; }");
+    grafo.setAttribute("ui.title", "Grafo de la Máquina de Turing");
+
+    grafo.display();
+}
+
+
     public boolean lecturaCadenas(String cadena) {
-        //Lectura de cadenas
+        // Lectura de cadenas
         char[] cinta = (cadena + "    ").toCharArray();
         int posicion = 0;
         String estadoActual = this.estadoInicial;
         System.out.println("Cadena a procesar: " + cadena);
         System.out.println("Cinta inicial: " + String.valueOf(cinta));
 
-        while (!estadoActual.equals(this.estadoFinal)) {
+        while (!estadosAceptacion.contains(estadoActual)) {
             char simboloLeido = cinta[posicion];
             String clave = estadoActual + "," + simboloLeido;
             System.out.println("Leyendo símbolo: " + simboloLeido + " en estado: " + estadoActual);
@@ -180,57 +169,55 @@ class TuringMachine {
                 return false;
             }
 
-            //Impresion de la posicion de la cadena
+            // Impresión de la posición de la cadena
             System.out.println("Estado actual: " + estadoActual);
             System.out.println("Cinta actual: " + String.valueOf(cinta));
             System.out.println("Posición: " + posicion);
         }
         
         System.out.println("---------------------------------------------------------------------");
-        System.out.println("Cadena aceptada. Estado final alcanzado: " + estadoActual);
+        System.out.println("Cadena aceptada. Estado de aceptación alcanzado: " + estadoActual);
         return true;
     }
-    
+
     public boolean Decidibles(String cadena) {
-    char[] cinta = (cadena + "    ").toCharArray();
-    int posicion = 0;
-    String estadoActual = this.estadoInicial;
-    Set<String> estadosRecorridos = new HashSet<>();
+        char[] cinta = (cadena + "    ").toCharArray();
+        int posicion = 0;
+        String estadoActual = this.estadoInicial;
+        Set<String> estadosRecorridos = new HashSet<>();
 
-    while (!estadoActual.equals(this.estadoFinal)) {
-        
-        if (estadosRecorridos.contains(estadoActual + "," + posicion)) {
-            System.out.println("Cadena no decidible. Se detectó un bucle infinito.");
-            return false;
+        while (!estadosAceptacion.contains(estadoActual)) {
+            if (estadosRecorridos.contains(estadoActual + "," + posicion)) {
+                System.out.println("Cadena no decidible. Se detectó un bucle infinito.");
+                return false;
+            }
+            estadosRecorridos.add(estadoActual + "," + posicion);
+
+            char simboloLeido = cinta[posicion];
+            String clave = estadoActual + "," + simboloLeido;
+            Transicion transicion = this.mapaTransiciones.get(clave);
+            if (transicion == null) {
+                System.out.println("Cadena no decidible. No hay transición para: " + clave);
+                return false;
+            }
+
+            // Movimientos R y L 
+            cinta[posicion] = transicion.simboloEscrito;
+            estadoActual = transicion.siguienteEstado;
+
+            if (transicion.movimiento == 'R') {
+                posicion++;
+            } else if (transicion.movimiento == 'L') {
+                posicion--;
+            }
+
+            if (posicion < 0 || posicion >= cinta.length) {
+                System.out.println("Cadena no decidible.");
+                return false;
+            }
         }
-        estadosRecorridos.add(estadoActual + "," + posicion);
 
-        char simboloLeido = cinta[posicion];
-        String clave = estadoActual + "," + simboloLeido;
-        Transicion transicion = this.mapaTransiciones.get(clave);
-        if (transicion == null) {
-            System.out.println("Cadena no decidible. No hay transición para: " + clave);
-            return false;
-        }
-
-        //Movimientos R y L 
-        cinta[posicion] = transicion.simboloEscrito;
-        estadoActual = transicion.siguienteEstado;
-
-        if (transicion.movimiento == 'R') {
-            posicion++;
-        } else if (transicion.movimiento == 'L') {
-            posicion--;
-        }
-
-        if (posicion < 0 || posicion >= cinta.length) {
-            System.out.println("Cadena no decidible.");
-            return false;
-        }
+        System.out.println("Cadena decidible y aceptada. Estado de aceptación alcanzado: " + estadoActual);
+        return true;
     }
-
-    System.out.println("Cadena decidible y aceptada. Estado final alcanzado: " + estadoActual);
-    return true;
-}
-    
 }
