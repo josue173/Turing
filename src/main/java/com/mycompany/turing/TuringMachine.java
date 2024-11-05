@@ -147,4 +147,90 @@ class TuringMachine {
 
         grafo.display();
     }
+    
+    public boolean lecturaCadenas(String cadena) {
+        //Lectura de cadenas
+        char[] cinta = (cadena + "    ").toCharArray();
+        int posicion = 0;
+        String estadoActual = this.estadoInicial;
+        System.out.println("Cadena a procesar: " + cadena);
+        System.out.println("Cinta inicial: " + String.valueOf(cinta));
+
+        while (!estadoActual.equals(this.estadoFinal)) {
+            char simboloLeido = cinta[posicion];
+            String clave = estadoActual + "," + simboloLeido;
+            System.out.println("Leyendo símbolo: " + simboloLeido + " en estado: " + estadoActual);
+            Transicion transicion = this.mapaTransiciones.get(clave);
+            if (transicion == null) {
+                System.out.println("No hay transición para: " + clave);
+                return false;
+            }
+
+            cinta[posicion] = transicion.simboloEscrito;
+            estadoActual = transicion.siguienteEstado;
+
+            if (transicion.movimiento == 'R') {
+                posicion++;
+            } else if (transicion.movimiento == 'L') {
+                posicion--;
+            }
+
+            if (posicion < 0 || posicion >= cinta.length) {
+                System.out.println("La cabeza de lectura se salió de los límites.");
+                return false;
+            }
+
+            //Impresion de la posicion de la cadena
+            System.out.println("Estado actual: " + estadoActual);
+            System.out.println("Cinta actual: " + String.valueOf(cinta));
+            System.out.println("Posición: " + posicion);
+        }
+        
+        System.out.println("---------------------------------------------------------------------");
+        System.out.println("Cadena aceptada. Estado final alcanzado: " + estadoActual);
+        return true;
+    }
+    
+    public boolean Decidibles(String cadena) {
+    char[] cinta = (cadena + "    ").toCharArray();
+    int posicion = 0;
+    String estadoActual = this.estadoInicial;
+    Set<String> estadosRecorridos = new HashSet<>();
+
+    while (!estadoActual.equals(this.estadoFinal)) {
+        
+        if (estadosRecorridos.contains(estadoActual + "," + posicion)) {
+            System.out.println("Cadena no decidible. Se detectó un bucle infinito.");
+            return false;
+        }
+        estadosRecorridos.add(estadoActual + "," + posicion);
+
+        char simboloLeido = cinta[posicion];
+        String clave = estadoActual + "," + simboloLeido;
+        Transicion transicion = this.mapaTransiciones.get(clave);
+        if (transicion == null) {
+            System.out.println("Cadena no decidible. No hay transición para: " + clave);
+            return false;
+        }
+
+        //Movimientos R y L 
+        cinta[posicion] = transicion.simboloEscrito;
+        estadoActual = transicion.siguienteEstado;
+
+        if (transicion.movimiento == 'R') {
+            posicion++;
+        } else if (transicion.movimiento == 'L') {
+            posicion--;
+        }
+
+        if (posicion < 0 || posicion >= cinta.length) {
+            System.out.println("Cadena no decidible.");
+            return false;
+        }
+    }
+
+    System.out.println("Cadena decidible y aceptada. Estado final alcanzado: " + estadoActual);
+    return true;
+}
+    
 }
