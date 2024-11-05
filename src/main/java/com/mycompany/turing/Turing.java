@@ -1,25 +1,44 @@
 package com.mycompany.turing;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Turing {
     public static void main(String[] args) {
         try {
-            TuringMachine turing = TuringMachine.cargarDesdeArchivo("resources/datos.txt");
+            Scanner scanner = new Scanner(System.in);
+            TuringMachine turing;
+
+            System.out.println("Seleccione el modo de carga de la máquina de Turing:");
+            System.out.println("1. Cargar desde archivo");
+            System.out.println("2. Ingresar manualmente");
+            int opcion = Integer.parseInt(scanner.nextLine().trim());
+
+            if (opcion == 1) {
+                // Cargar desde archivo
+                turing = TuringMachine.cargarDesdeArchivo("resources/datos.txt");
+            } else if (opcion == 2) {
+                // Ingresar manualmente
+                turing = cargarManual(scanner);
+            } else {
+                System.out.println("Opción no válida.");
+                return;
+            }
+
             turing.imprimirConfiguracion();
             turing.CrearGrafo();
 
-            Scanner scanner = new Scanner(System.in);
             while (true) {
-                
-                //Ingreso de cadenas
+                // Ingreso de cadenas
                 System.out.println("Ingrese una cadena para verificar:");
                 String cadena = scanner.nextLine().trim();
                 boolean aceptada = turing.lecturaCadenas(cadena);
                 boolean decidible = turing.Decidibles(cadena);
 
-                //Si la cadena es aceptada o decidible
                 if (aceptada) {
                     System.out.println("La cadena fue aceptada.");
                 } else {
@@ -38,5 +57,50 @@ public class Turing {
             System.err.println("Se produjo un error: " + e.getMessage());
         }
     }
-}
+    
+    
 
+    public static TuringMachine cargarManual(Scanner scanner) {
+        TuringMachine turing;
+        System.out.println("Ingrese el estado inicial:");
+        String estadoInicial = scanner.nextLine().trim();
+
+        System.out.println("Ingrese el estado final:");
+        String estadoFinal = scanner.nextLine().trim();
+
+        System.out.println("Ingrese los estados de aceptación (separados por comas):");
+        Set<String> estadosAceptacion = new HashSet<>();
+        for (String estado : scanner.nextLine().split(",")) {
+            estadosAceptacion.add(estado.trim());
+        }
+
+        System.out.println("Ingrese los estados intermedios (separados por comas):");
+        Set<String> estadosIntermedios = new HashSet<>();
+        for (String estado : scanner.nextLine().split(",")) {
+            estadosIntermedios.add(estado.trim());
+        }
+
+        Map<String, Transicion> mapaTransiciones = new HashMap<>();
+        System.out.println("Ingrese las transiciones en el formato 'estadoActual,símboloLeído,símboloEscrito,nuevoEstado,movimiento' (escriba 'fin' para terminar):");
+        while (true) {
+            String linea = scanner.nextLine().trim();
+          
+            if (linea.equalsIgnoreCase("fin")) {
+                break;
+            }
+            String[] partes = linea.split(",");
+            if (partes.length == 5) {
+                String estadoActual = partes[0];
+                char simboloLeido = partes[1].charAt(0);
+                char simboloEscrito = partes[2].charAt(0);
+                String nuevoEstado = partes[3];
+                char movimiento = partes[4].charAt(0);
+                mapaTransiciones.put(estadoActual + "," + simboloLeido, new Transicion(simboloLeido, simboloEscrito, nuevoEstado, movimiento));
+            } else {
+                System.out.println("Formato incorrecto. Intente nuevamente.");
+            }
+        }
+
+        return new TuringMachine(estadoInicial, estadoFinal, estadosIntermedios, estadosAceptacion, mapaTransiciones);
+    }
+}

@@ -94,7 +94,7 @@ class TuringMachine {
         lector.close();
         return machine;
     }
-
+   
     public void CrearGrafo() {
         System.setProperty("org.graphstream.ui", "swing");
         Graph grafo = new SingleGraph("Máquina de Turing");
