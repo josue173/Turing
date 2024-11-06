@@ -59,44 +59,52 @@ public class Turing {
     }
 
     public static TuringMachine cargarManual(Scanner scanner) {
-        TuringMachine turing;
-        System.out.println("Ingrese el estado inicial:");
-        String estadoInicial = scanner.nextLine().trim();
+         TuringMachine turing;
+    System.out.println("Ingrese el estado inicial:");
+    String estadoInicial = scanner.nextLine().trim();
 
-        System.out.println("Ingrese los estados de aceptación (separados por comas):");
-        Set<String> estadosAceptacion = new HashSet<>();
-        for (String estado : scanner.nextLine().split(",")) {
-            estadosAceptacion.add(estado.trim());
+    System.out.println("Ingrese los estados de aceptación (separados por comas):");
+    Set<String> estadosAceptacion = new HashSet<>();
+    for (String estado : scanner.nextLine().split(",")) {
+        estadosAceptacion.add(estado.trim());
+    }
+
+    System.out.println("Ingrese los estados intermedios (separados por comas):");
+    Set<String> estadosIntermedios = new HashSet<>();
+    for (String estado : scanner.nextLine().split(",")) {
+        estadosIntermedios.add(estado.trim());
+    }
+
+    Map<String, Transicion> mapaTransiciones = new HashMap<>();
+    System.out.println("Ingrese las transiciones en el formato especificado (escriba 'fin' para terminar):");
+
+    while (true) {
+        System.out.println("Estado actual:");
+        String estadoActual = scanner.nextLine().trim();
+        if (estadoActual.equalsIgnoreCase("fin")) break;
+
+        System.out.println("Estado siguiente:");
+        String siguienteEstado = scanner.nextLine().trim();
+        if (siguienteEstado.equalsIgnoreCase("fin")) break;
+
+        System.out.println("Función de transición (formato a:b,c):");
+        String funcionTransicion = scanner.nextLine().trim();
+        if (funcionTransicion.equalsIgnoreCase("fin")) break;
+
+        String[] partesTransicion = funcionTransicion.split(":|,");
+        if (partesTransicion.length == 3) {
+            char simboloLeido = partesTransicion[0].charAt(0);
+            char simboloEscrito = partesTransicion[1].charAt(0);
+            char movimiento = partesTransicion[2].charAt(0);
+
+            // Añadimos la transición al mapa
+            mapaTransiciones.put(estadoActual + "," + simboloLeido,
+                new Transicion(simboloLeido, simboloEscrito, siguienteEstado, movimiento));
+        } else {
+            System.out.println("Formato incorrecto. Intente nuevamente.");
         }
+    }
 
-        System.out.println("Ingrese los estados intermedios (separados por comas):");
-        Set<String> estadosIntermedios = new HashSet<>();
-        for (String estado : scanner.nextLine().split(",")) {
-            estadosIntermedios.add(estado.trim());
-        }
-
-        Map<String, Transicion> mapaTransiciones = new HashMap<>();
-        System.out.println("Ingrese las transiciones en el formato 'estadoActual,símboloLeído,símboloEscrito,siguienteEstado,movimiento' (escriba 'fin' para terminar):");
-        while (true) {
-            String linea = scanner.nextLine().trim();
-          
-            if (linea.equalsIgnoreCase("fin")) {
-                break;
-            }
-            String[] partesLinea = linea.split(",");
-            
-            if (partesLinea.length == 5) {
-            String estadoActual = partesLinea[0];
-            char simboloLeido = partesLinea[1].charAt(0);
-            char simboloEscrito = partesLinea[2].charAt(0);
-            String siguienteEstado = partesLinea[3];
-            char movimiento = partesLinea[4].charAt(0);
-            mapaTransiciones.put(estadoActual + "," + simboloLeido, new Transicion(simboloLeido, simboloEscrito, siguienteEstado, movimiento));
-            } else {
-                System.out.println("Formato incorrecto. Intente nuevamente.");
-            }
-        }
-
-        return new TuringMachine(estadoInicial, estadosIntermedios, estadosAceptacion, mapaTransiciones);
+    return new TuringMachine(estadoInicial, estadosIntermedios, estadosAceptacion, mapaTransiciones);
     }
 }
